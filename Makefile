@@ -1,3 +1,6 @@
+BUILD_IMAGE?=golang:1.13
+DOCKER_CMD?=ls
+
 # More exclusions can be added similar with: -not -path './testbed/*'
 ALL_SRC := $(shell find . -name '*.go' \
                                 -not -path './testbed/*' \
@@ -104,8 +107,8 @@ install-tools:
 otelcol:
 	GO111MODULE=on CGO_ENABLED=0 go build -o ./bin/$(GOOS)/otelcol $(BUILD_INFO) ./cmd/otelcol
 
-.PHONY: docker-component # Not intended to be used directly
-docker-component: check-component
+.PHONY: build-component-image # Not intended to be used directly
+build-component-image: check-component
 	GOOS=linux $(MAKE) $(COMPONENT)
 	cp ./bin/linux/$(COMPONENT) ./cmd/$(COMPONENT)/
 	docker build -t $(COMPONENT) ./cmd/$(COMPONENT)/
@@ -117,9 +120,9 @@ ifndef COMPONENT
 	$(error COMPONENT variable was not defined)
 endif
 
-.PHONY: docker-otelcol
-docker-otelcol:
-	COMPONENT=otelcol $(MAKE) docker-component
+.PHONY: build-otelcol-image
+build-otelcol-image:
+	COMPONENT=otelcol $(MAKE) build-component-image
 
 .PHONY: binaries
 binaries: otelcol
@@ -129,3 +132,12 @@ binaries-all-sys:
 	GOOS=darwin $(MAKE) binaries
 	GOOS=linux $(MAKE) binaries
 	GOOS=windows $(MAKE) binaries
+
+# Docker targets 
+.PHONY: docker_cmd
+docker-cmd:
+	@docker run --rm -i -v "$(PWD)":"/src" -v "$(PWD)/_caches/go":"/go" -w /src $(BUILD_IMAGE) $(DOCKER_CMD)
+
+.PHONY: build-otelcol
+build-otelcol:
+	$(MAKE) docker-cmd DOCKER_CMD="make otelcol"

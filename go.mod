@@ -12,6 +12,8 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.2.1
 	github.com/client9/misspell v0.3.4
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
+	github.com/dimchansky/utfbom v1.1.0 // indirect
+	github.com/dnaeon/go-vcr v1.0.1 // indirect
 	github.com/go-kit/kit v0.9.0
 	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/golang/protobuf v1.3.2
@@ -23,6 +25,9 @@ require (
 	github.com/hashicorp/consul/api v1.2.0 // indirect
 	github.com/jaegertracing/jaeger v1.14.0
 	github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024
+	github.com/marstr/goalias v0.0.0-20180416201319-8dff9a14db64 // indirect
+	github.com/marstr/guid v1.1.0 // indirect
+	github.com/marstr/randname v0.0.0-20181206212954-d5b0f288ab8c // indirect
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/open-telemetry/opentelemetry-proto v0.0.0-20200206071824-8310c432e51c
 	github.com/openzipkin/zipkin-go v0.2.1
@@ -35,6 +40,7 @@ require (
 	github.com/prometheus/procfs v0.0.3
 	github.com/prometheus/prometheus v1.8.2-0.20190924101040-52e0504f83ea
 	github.com/rs/cors v1.6.0
+	github.com/shopspring/decimal v0.0.0-20200105231215-408a2507e114 // indirect
 	github.com/soheilhy/cmux v0.1.4
 	github.com/spf13/cast v1.3.0
 	github.com/spf13/cobra v0.0.5
