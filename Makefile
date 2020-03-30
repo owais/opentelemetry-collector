@@ -132,10 +132,11 @@ install-tools:
 	go install github.com/pavius/impi/cmd/impi
 	go install github.com/securego/gosec/cmd/gosec
 	go install honnef.co/go/tools/cmd/staticcheck
+	go install github.com/tcnksm/ghr
 
 .PHONY: otelcol
 otelcol:
-	GO111MODULE=on CGO_ENABLED=0 go build -o ./bin/$(GOOS)_$(GOARCH)/otelcol $(BUILD_INFO) ./cmd/otelcol
+	GO111MODULE=on CGO_ENABLED=0 go build -o ./bin/otelcol_$(GOOS)_$(GOARCH) $(BUILD_INFO) ./cmd/otelcol
 
 .PHONY: docker-component # Not intended to be used directly
 docker-component: check-component
