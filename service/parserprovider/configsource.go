@@ -26,6 +26,7 @@ import (
 	"go.opentelemetry.io/collector/experimental/configsource/envvarconfigsource"
 	"go.opentelemetry.io/collector/experimental/configsource/fileconfigsource"
 	"go.opentelemetry.io/collector/experimental/configsource/vaultconfigsource"
+	"go.opentelemetry.io/collector/experimental/configsource/zookeeperconfigsource"
 )
 
 type configSourceParserProvider struct {
@@ -54,6 +55,7 @@ func (c *configSourceParserProvider) Get() (*config.Parser, error) {
 		vaultconfigsource.NewFactory(),
 		fileconfigsource.NewFactory(),
 		envvarconfigsource.NewFactory(),
+		zookeeperconfigsource.NewFactory(),
 	)
 	if err != nil {
 		return nil, err
