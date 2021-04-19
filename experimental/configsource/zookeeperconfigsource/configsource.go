@@ -13,10 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package zkConfigSource
+package zookeeperconfigsource
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-zookeeper/zk"
 	"go.uber.org/zap"
@@ -24,44 +25,33 @@ import (
 	"go.opentelemetry.io/collector/experimental/configsource"
 )
 
-type zkConfigSource struct {
+type zookeeperconfigsource struct {
 	logger    *zap.Logger
-	conn      *zk.Conn
 	endpoints []string
-	timeout   uint
+	timeout   time.Duration
 }
 
-var _ configsource.ConfigSource = (*zkConfigSource)(nil)
+var _ configsource.ConfigSource = (*zookeeperconfigsource)(nil)
 
-func (v *zkConfigSource) NewSession(context.Context) (configsource.Session, error) {
-	return newSession(v.logger, v.connect)
+func (z *zookeeperconfigsource) NewSession(ctx context.Context) (configsource.Session, error) {
+	return &zkSession{
+		logger:  z.logger,
+		connect: newConnectFunc(z.endpoints, z.timeout),
+	}, nil
 }
 
-func (z *zkConfigSource) connect(context.Context) (*zk.Conn, error) {
-	if z.conn != nil && z.conn.State() != zk.StateDisconnected {
-		return z.conn, nil
-	}
+// newConnectFunc ...
+func newConnectFunc(endpoints []string, timeout time.Duration) connectFunc {
+	var conn *zk.Conn
+	return func(ctx context.Context) (zkConnection, error) {
+		if conn != nil && conn.State() != zk.StateDisconnected {
+			return conn, nil
+		}
 
-	conn, _, err := zk.Connect(z.endpoints, z.timeout, zk.WithLogInfo(false))
-	if err != nil {
-		return nil, err
+		conn, _, err := zk.Connect(endpoints, timeout, zk.WithLogInfo(false))
+		if err != nil {
+			return nil, err
+		}
+		return conn, nil
 	}
-	z.conn = conn
-	return z.conn, nil
-}
-
-func newConfigSource(logger *zap.Logger, cfg *Config) (*zkConfigSource, error) {
-	z := &zkConfigSource{
-		logger:    logger,
-		endpoints: cfg.Endpoints,
-		timeout:   cfg.Timeout,
-	}
-
-	conn, err := z.connect(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	z.conn = conn
-	return z, nil
 }

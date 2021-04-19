@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package zkConfigSource
+package zookeeperconfigsource
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/experimental/configsource"
@@ -29,16 +30,13 @@ const (
 	typeStr = "zookeeper"
 
 	defaultEndpoint = "http://localhost:2181"
-	defaultTimeout  = 10
+	defaultTimeout  = time.Second * 10
 )
 
 // Private error types to help with testability.
 type (
-	errMissingEndpoint         struct{ error }
-	errInvalidEndpoint         struct{ error }
-	errMissingToken            struct{ error }
-	errMissingPath             struct{ error }
-	errNonPositivePollInterval struct{ error }
+	errMissingEndpoint struct{ error }
+	errInvalidEndpoint struct{ error }
 )
 
 type zkFactory struct{}
@@ -51,6 +49,7 @@ func (v *zkFactory) CreateDefaultConfig() configsource.ConfigSettings {
 	return &Config{
 		Settings:  configsource.NewSettings(typeStr),
 		Endpoints: []string{defaultEndpoint},
+		Timeout:   defaultTimeout,
 	}
 }
 
@@ -67,9 +66,14 @@ func (v *zkFactory) CreateConfigSource(_ context.Context, params configsource.Cr
 		}
 	}
 
-	return newConfigSource(params.Logger, zkCfg)
+	return &zookeeperconfigsource{
+		logger:    params.Logger,
+		endpoints: zkCfg.Endpoints,
+		timeout:   zkCfg.Timeout,
+	}, nil
 }
 
+// NewFactory returns a new zookeekeper config source factory
 func NewFactory() configsource.Factory {
 	return &zkFactory{}
 }

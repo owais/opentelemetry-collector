@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package etcd2configsource
+package zookeeperconfigsource
 
 import (
 	"context"
@@ -27,9 +27,9 @@ import (
 	"go.opentelemetry.io/collector/experimental/configsource"
 )
 
-func TestEtcd2Factory_CreateConfigSource(t *testing.T) {
+func TestZookeeperFactory_CreateConfigSource(t *testing.T) {
 	factory := NewFactory()
-	assert.Equal(t, config.Type("etcd2"), factory.Type())
+	assert.Equal(t, config.Type("zookeeper"), factory.Type())
 	createParams := configsource.CreateParams{
 		Logger: zap.NewNop(),
 	}
@@ -51,7 +51,7 @@ func TestEtcd2Factory_CreateConfigSource(t *testing.T) {
 			wantErr: &errInvalidEndpoint{},
 		},
 		{
-			name: "missing_token",
+			name: "invalid_endpoint_partial",
 			config: &Config{
 				Endpoints: []string{"http://localhost:8200", "bad endpoint"},
 			},
@@ -61,8 +61,6 @@ func TestEtcd2Factory_CreateConfigSource(t *testing.T) {
 			name: "success",
 			config: &Config{
 				Endpoints: []string{"http://localhost:8200"},
-				Username:  "user",
-				Password:  "pass",
 			},
 		},
 	}

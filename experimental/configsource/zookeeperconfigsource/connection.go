@@ -13,15 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package etcd2configsource
+package zookeeperconfigsource
 
 import (
-	"go.opentelemetry.io/collector/experimental/configsource"
+	"context"
+
+	"github.com/go-zookeeper/zk"
 )
 
-type Config struct {
-	*configsource.Settings
-	Endpoints []string `mapstructure:"endpoints"`
-	Username  string   `mapstructure:"username"`
-	Password  string   `mapstructure:"password"`
+// zkConnection defines an interface that satisfies all functionality
+// a session needs from zk.Conn. This allows us to easily mock
+// the connection in tests.
+type zkConnection interface {
+	GetW(string) ([]byte, *zk.Stat, <-chan zk.Event, error)
 }
+
+type connectFunc func(context.Context) (zkConnection, error)

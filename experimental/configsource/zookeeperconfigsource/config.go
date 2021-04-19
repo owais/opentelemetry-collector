@@ -13,14 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package zkConfigSource
+package zookeeperconfigsource
 
 import (
+	"time"
+
 	"go.opentelemetry.io/collector/experimental/configsource"
 )
 
+// Config defines zookeeperconfigsource configuration
 type Config struct {
 	*configsource.Settings
-	Endpoints []string `mapstructure:",squash"`
-	Timeout   uint     `mapstructure:",squash"`
+	Endpoints []string      `mapstructure:"endpoints"`
+	Timeout   time.Duration `mapstructure:"timeout"`
 }

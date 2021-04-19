@@ -1,7 +1,0 @@
-config_sources:
-  etcd2:
-    endpoints: [http://localhost:1234]
-  etcd2/auth:
-    endpoints: [https://localhost:3456]
-    username: user 
-    password: pass

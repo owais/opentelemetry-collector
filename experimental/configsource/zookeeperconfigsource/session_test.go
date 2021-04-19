@@ -13,16 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package etcd2configsource
+package zookeeperconfigsource
 
 import (
 	"context"
 	"errors"
 	"testing"
 
+	"github.com/go-zookeeper/zk"
 	"github.com/stretchr/testify/assert"
-	"go.opentelemetry.io/collector/experimental/configsource"
 	"go.uber.org/zap"
+
+	"go.opentelemetry.io/collector/experimental/configsource"
 )
 
 func sPtr(s string) *string {
@@ -31,14 +33,14 @@ func sPtr(s string) *string {
 
 func TestSessionRetrieve(t *testing.T) {
 	logger := zap.NewNop()
-	kapi := &MockKeysAPI{
-		db: map[string]string{
-			"k1":       "v1",
-			"d1/d2/k1": "v5",
-		},
-	}
+	conn := newMockConnection(map[string]string{
+		"k1":       "v1",
+		"d1/d2/k1": "v5",
+	})
+	connect := newMockConnectFunc(conn)
 
-	session := &etcd2Session{logger: logger, kapi: kapi}
+	session := &zkSession{logger: logger, connect: connect}
+
 	testsCases := []struct {
 		name   string
 		key    string
@@ -68,7 +70,10 @@ func TestSessionRetrieve(t *testing.T) {
 
 func TestWatcher(t *testing.T) {
 	logger := zap.NewNop()
-	kapi := &MockKeysAPI{db: map[string]string{"k1": "v1"}}
+	conn := newMockConnection(map[string]string{
+		"k1": "v1",
+	})
+	connect := newMockConnectFunc(conn)
 
 	testsCases := []struct {
 		name   string
@@ -83,31 +88,36 @@ func TestWatcher(t *testing.T) {
 
 	for _, c := range testsCases {
 		t.Run(c.name, func(t *testing.T) {
-			watcher := newMockWatcher()
-			kapi.activeWatcher = watcher
 
-			session := &etcd2Session{logger: logger, kapi: kapi}
+			session := &zkSession{logger: logger, connect: connect}
 			retrieved, err := session.Retrieve(context.Background(), "k1", nil)
 			assert.NoError(t, err)
 			assert.NotNil(t, retrieved.Value)
 			assert.NotNil(t, retrieved.WatchForUpdate)
 
 			go func() {
-				if c.close {
+				watcher := conn.watches["k1"]
+				switch {
+				case c.close:
 					session.Close(context.Background())
-				} else if c.result != "" {
-					watcher.values <- c.result
-				} else if c.err != nil {
-					watcher.errors <- c.err
+				case c.result != "":
+					watcher <- zk.Event{
+						Type: zk.EventNodeDataChanged,
+					}
+				case c.err != nil:
+					watcher <- zk.Event{
+						Err: err,
+					}
 				}
 			}()
 
 			err = retrieved.WatchForUpdate()
-			if c.close {
+			switch {
+			case c.close:
 				assert.ErrorIs(t, err, configsource.ErrSessionClosed)
-			} else if c.result != "" {
+			case c.result != "":
 				assert.ErrorIs(t, err, configsource.ErrValueUpdated)
-			} else if c.err != nil {
+			case c.err != nil:
 				assert.ErrorIs(t, err, configsource.ErrSessionClosed)
 			}
 		})

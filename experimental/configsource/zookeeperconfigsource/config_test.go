@@ -13,12 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package etcd2configsource
+package zookeeperconfigsource
 
 import (
 	"context"
 	"path"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -27,7 +28,7 @@ import (
 	"go.opentelemetry.io/collector/experimental/configsource"
 )
 
-func TestEtcd2LoadConfig(t *testing.T) {
+func TestZookeeperLoadConfig(t *testing.T) {
 	fileName := path.Join("testdata", "config.yaml")
 	v, err := config.NewParserFromFile(fileName)
 	require.NoError(t, err)
@@ -40,21 +41,21 @@ func TestEtcd2LoadConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedSettings := map[string]configsource.ConfigSettings{
-		"etcd2": &Config{
+		"zookeeper": &Config{
 			Settings: &configsource.Settings{
-				TypeVal: "etcd2",
-				NameVal: "etcd2",
+				TypeVal: "zookeeper",
+				NameVal: "zookeeper",
 			},
 			Endpoints: []string{"http://localhost:1234"},
+			Timeout:   time.Second * 10,
 		},
-		"etcd2/auth": &Config{
+		"zookeeper/timeout": &Config{
 			Settings: &configsource.Settings{
-				TypeVal: "etcd2",
-				NameVal: "etcd2/auth",
+				TypeVal: "zookeeper",
+				NameVal: "zookeeper/timeout",
 			},
-			Endpoints: []string{"https://localhost:3456"},
-			Username:  "user",
-			Password:  "pass",
+			Endpoints: []string{"https://localhost:3010"},
+			Timeout:   time.Second * 8,
 		},
 	}
 
