@@ -30,9 +30,9 @@ const maxBackoffTime = time.Second * 120
 
 // etcd2Session implements the configsource.Session interface.
 type etcd2Session struct {
-	logger        *zap.Logger
-	kapi          client.KeysAPI
-	cancelWatcher func()
+	logger     *zap.Logger
+	kapi       client.KeysAPI
+	closeFuncs []func()
 }
 
 var _ configsource.Session = (*etcd2Session)(nil)
@@ -44,7 +44,7 @@ func (s *etcd2Session) Retrieve(ctx context.Context, selector string, _ interfac
 	}
 
 	watchCtx, cancel := context.WithCancel(context.Background())
-	s.cancelWatcher = cancel
+	s.closeFuncs = append(s.closeFuncs, cancel)
 
 	return configsource.NewRetrieved(resp.Node.Value, s.newWatcher(watchCtx, selector, resp.Node.ModifiedIndex)), nil
 }
@@ -54,8 +54,8 @@ func (s *etcd2Session) RetrieveEnd(context.Context) error {
 }
 
 func (s *etcd2Session) Close(context.Context) error {
-	if s.cancelWatcher != nil {
-		s.cancelWatcher()
+	for _, cancel := range s.closeFuncs {
+		cancel()
 	}
 
 	return nil

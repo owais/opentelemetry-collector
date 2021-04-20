@@ -34,8 +34,9 @@ var _ configsource.ConfigSource = (*etcd2ConfigSource)(nil)
 
 func (v *etcd2ConfigSource) NewSession(context.Context) (configsource.Session, error) {
 	return &etcd2Session{
-		logger: v.logger,
-		kapi:   v.kapi,
+		logger:     v.logger,
+		kapi:       v.kapi,
+		closeFuncs: []func(){},
 	}, nil
 }
 
