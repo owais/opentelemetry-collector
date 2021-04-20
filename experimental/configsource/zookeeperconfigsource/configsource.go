@@ -37,6 +37,7 @@ func (z *zookeeperconfigsource) NewSession(ctx context.Context) (configsource.Se
 	return &zkSession{
 		logger:  z.logger,
 		connect: newConnectFunc(z.endpoints, z.timeout),
+		closeCh: make(chan struct{}),
 	}, nil
 }
 
