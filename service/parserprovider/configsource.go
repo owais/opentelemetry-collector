@@ -24,6 +24,7 @@ import (
 	"go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/experimental/configsource"
 	"go.opentelemetry.io/collector/experimental/configsource/envvarconfigsource"
+	"go.opentelemetry.io/collector/experimental/configsource/etcd2configsource"
 	"go.opentelemetry.io/collector/experimental/configsource/fileconfigsource"
 	"go.opentelemetry.io/collector/experimental/configsource/vaultconfigsource"
 	"go.opentelemetry.io/collector/experimental/configsource/zookeeperconfigsource"
@@ -56,6 +57,7 @@ func (c *configSourceParserProvider) Get() (*config.Parser, error) {
 		fileconfigsource.NewFactory(),
 		envvarconfigsource.NewFactory(),
 		zookeeperconfigsource.NewFactory(),
+		etcd2configsource.NewFactory(),
 	)
 	if err != nil {
 		return nil, err
