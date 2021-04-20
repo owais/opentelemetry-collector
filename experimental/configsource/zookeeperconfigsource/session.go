@@ -26,9 +26,9 @@ import (
 
 // zkSession implements the configsource.Session interface.
 type zkSession struct {
-	logger      *zap.Logger
-	connect     connectFunc
-	cancelWatch func()
+	logger  *zap.Logger
+	connect connectFunc
+	closeCh chan struct{}
 }
 
 var _ configsource.Session = (*zkSession)(nil)
@@ -43,10 +43,7 @@ func (s *zkSession) Retrieve(ctx context.Context, selector string, _ interface{}
 		return nil, err
 	}
 
-	watchCtx, cancel := context.WithCancel(context.Background())
-	s.cancelWatch = cancel
-
-	return configsource.NewRetrieved(value, newWatcher(watchCtx, watchCh)), nil
+	return configsource.NewRetrieved(value, newWatcher(ctx, watchCh, s.closeCh)), nil
 }
 
 func (s *zkSession) RetrieveEnd(context.Context) error {
@@ -54,17 +51,17 @@ func (s *zkSession) RetrieveEnd(context.Context) error {
 }
 
 func (s *zkSession) Close(context.Context) error {
-	if s.cancelWatch != nil {
-		s.cancelWatch()
+	if s.closeCh != nil {
+		close(s.closeCh)
 	}
 
 	return nil
 }
 
-func newWatcher(ctx context.Context, watchCh <-chan zk.Event) func() error {
+func newWatcher(ctx context.Context, watchCh <-chan zk.Event, closeCh <-chan struct{}) func() error {
 	return func() error {
 		select {
-		case <-ctx.Done():
+		case <-closeCh:
 			return configsource.ErrSessionClosed
 		case e := <-watchCh:
 			if e.Err != nil {
